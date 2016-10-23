@@ -1,0 +1,100 @@
+
+ @gangeshrajput
+ Fork 0 gangeshrajput/Practical-Machine-Learning-by-John-Hopkins-University
+ Code  Issues 0  Pull requests 0  Projects 0  Wiki  Pulse  Graphs  Settings
+Branch: master Find file Copy pathPractical-Machine-Learning-by-John-Hopkins-University/Project_R_Code
+c3073ff  7 minutes ago
+@gangeshrajput gangeshrajput Update Project_R_Code
+1 contributor
+RawBlameHistory     
+87 lines (70 sloc)  2.57 KB
+
+
+library(rattle)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(corrplot)
+library(randomForest)
+library(RColorBrewer)
+library(e1071)
+
+#loading training and testing data sets
+training = read.csv("~/Gangesh/Desktop/Courses/Practical Machine Learning by John Hopkins - Coursera/Project/pml-training.csv")
+testing = read.csv("~/Gangesh/Desktop/Courses/Practical Machine Learning by John Hopkins - Coursera/Project/pml-testing.csv")
+
+dim(training);dim(testing)
+
+#Cleaning Data
+#identifying Near Zero Variance variables
+NZV=nearZeroVar(training,saveMetrics=TRUE)
+head(NZV,10)
+
+#removing the zero covariates
+training01 <- training[, !NZV$nzv]
+testing01 <- testing[, !NZV$nzv]
+dim(training01)
+dim(testing01)
+
+#removing columns that do not contribute much to the accelerometer measurements 
+regex <- grepl("^X|timestamp|user_name", names(training01))
+training <- training01[, !regex]
+testing <- testing01[, !regex]
+rm(regex)
+rm(training01)
+rm(testing01)
+dim(training)
+dim(testing)
+
+#Removing columns that contain NA's.
+cond <- (colSums(is.na(training)) == 0)
+training <- training[, cond]
+testing <- testing[, cond]
+rm(cond)
+
+#correlation matrix of columns
+corrplot(cor(training[, -length(names(training))]), method = "color", tl.cex = 0.5)
+
+#applying cross validation
+set.seed(56789) # For reproducibile purpose
+inTrain <- createDataPartition(training$classe, p = 0.70, list = FALSE)
+validation <- training[-inTrain, ]
+training <- training[inTrain, ]
+rm(inTrain)
+
+#fitting decision tree model for activity quality detection
+modFitTree <- rpart(classe ~ ., data = training, method = "class")
+# prp function is present in package rpart.plot
+prp(modFitTree)
+
+predictTree <- predict(modFitTree, validation, type = "class")
+confusionMatrix(validation$classe, predictTree)
+
+#checking the model accuracy and out of sample error
+accuracy <- postResample(predictTree, validation$classe)
+ose <- 1 - as.numeric(confusionMatrix(validation$classe, predictTree)$overall[1])
+#rm(predictTree)
+#rm(modFitTree)
+ose
+accuracy
+
+#fitting random forest because it is more robust to correlated variables and outliers
+#using 5 fold cross validation 
+modelRF <- train(classe ~ ., data = training, method = "rf", trControl =trainControl(method = "cv", 5), ntree = 250)
+modelRF
+
+#estimating performance on validation set
+predictRF <- predict(modelRF, validation)
+confusionMatrix(validation$classe, predictRF)
+
+accuracy <- postResample(predictRF, validation$classe)
+ose <- 1 - as.numeric(confusionMatrix(validation$classe, predictRF)$overall[1])
+rm(predictRF)
+
+#predicting on test set
+rm(accuracy)
+rm(ose)
+predict(modelRF, testing[, -length(names(testing))])
+
+Contact GitHub API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Status Help
