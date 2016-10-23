@@ -8,8 +8,8 @@ library(RColorBrewer)
 library(e1071)
 
 #loading training and testing data sets
-training = read.csv("C:/Users/Gangesh/Desktop/Courses/Practical Machine Learning by John Hopkins - Coursera/Project/pml-training.csv")
-testing = read.csv("C:/Users/Gangesh/Desktop/Courses/Practical Machine Learning by John Hopkins - Coursera/Project/pml-testing.csv")
+training = read.csv("~/Gangesh/Desktop/Courses/Practical Machine Learning by John Hopkins - Coursera/Project/pml-training.csv")
+testing = read.csv("~/Gangesh/Desktop/Courses/Practical Machine Learning by John Hopkins - Coursera/Project/pml-testing.csv")
 
 dim(training);dim(testing)
 
